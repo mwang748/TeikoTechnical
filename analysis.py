@@ -139,7 +139,6 @@ def report_diffs(groups):
 
 # Part 4:
 
-# Part 4
 BASELINE_QUERY = """
 WITH baseline AS (
     SELECT samples.sample, samples.subject, subjects.project, subjects.response, subjects.sex
@@ -197,16 +196,16 @@ def avg_b_cells():
     with closing(sqlite3.connect(DATABASE)) as connection:
         return connection.execute(AVG_B_CELLS).fetchone()[0]
 if __name__ == "__main__":
-    # # Part 2:
-    # display_frequencies()
+    # Part 2:
+    display_frequencies()
     
-    # # Part 3:
-    # groups = get_diffs()
-    # report_diffs(groups)
-    # plot_diffs(groups)
+    # Part 3:
+    groups = get_diffs()
+    report_diffs(groups)
+    plot_diffs(groups)
 
-    # # Part 4:
-    # display_baseline_summary()
+    # Part 4:
+    display_baseline_summary()
 
     # Avg b_cells
     b_cells = avg_b_cells()

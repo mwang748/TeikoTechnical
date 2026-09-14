@@ -55,8 +55,7 @@ def main():
         }, indent=2) + "\n",
         encoding="utf-8",
     )
-    print(f"Wrote {len(frequencies)} frequency rows and {len(comparisons)} comparisons.")
-    print(f"Baseline cohort: {len(sample_ids)} samples.")
+    print("Pipeline Done.")
 
 
 if __name__ == "__main__":
