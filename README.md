@@ -1,6 +1,6 @@
 # Immune cell analysis
 
-This project loads `data/cell-count.csv` into SQLite and explores immune-cell frequencies, response to miraclib, and the baseline melanoma PBMC subset.
+This repo is for the Teiko Technical assessment,
 
 ## Run in GitHub Codespaces
 
