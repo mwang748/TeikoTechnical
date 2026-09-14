@@ -4,7 +4,7 @@ import csv
 import json
 from pathlib import Path
 
-from analysis import DATABASE, get_baseline_summary, get_diff_stats, get_diffs, get_frequencies
+from analysis import DAYS, DATABASE, get_baseline_summary, get_diff_stats, get_diffs, get_frequencies
 
 
 OUTPUT_DIR = Path(__file__).resolve().parent / "outputs"
@@ -30,14 +30,14 @@ def main():
     )
 
     comparisons = []
-    for day in (0, 7, 14):
+    for day in DAYS:
         for row in get_diff_stats(get_diffs(day)):
             comparisons.append({"day": day, **row})
     write_csv(
         OUTPUT_DIR / "response_comparison.csv",
         comparisons,
-        ["day", "population", "yes_n", "no_n", "yes_median", "no_median",
-         "p_value", "adjusted_p", "significant"],
+        ["day", "population", "yes_n", "no_n", "yes_mean", "no_mean",
+         "p_value", "significant"],
     )
 
     sample_ids, projects, responses, sexes = get_baseline_summary()

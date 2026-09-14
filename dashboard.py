@@ -4,7 +4,9 @@ import streamlit as st
 
 from analysis import (
     DATABASE,
+    DAYS,
     POPULATIONS,
+    SIGNIFICANCE_CUTOFF,
     get_baseline_summary,
     get_diff_stats,
     get_diffs,
@@ -35,7 +37,7 @@ with overview_tab:
 
 with response_tab:
     st.subheader("Melanoma PBMC samples from miraclib recipients")
-    day = st.selectbox("Days from treatment start", [0, 7, 14])
+    day = st.selectbox("Days from treatment start", DAYS)
     if day == 0:
         st.caption("Day 0 is the primary comparison for exploring response prediction.")
     else:
@@ -48,17 +50,16 @@ with response_tab:
             "population": "Population",
             "yes_n": "Responders",
             "no_n": "Non-responders",
-            "yes_median": "Responder median (%)",
-            "no_median": "Non-responder median (%)",
+            "yes_mean": "Responder mean (%)",
+            "no_mean": "Non-responder mean (%)",
             "p_value": "p-value",
-            "adjusted_p": "Adjusted p-value",
-            "significant": "Significant (0.05)",
+            "significant": f"Significant (p < {SIGNIFICANCE_CUTOFF:.4f})",
         }).round(4),
         hide_index=True,
         width="stretch",
     )
     if not any(row["significant"] for row in stats):
-        st.info("No population differs significantly after adjustment for five tests.")
+        st.info(f"No cell population has a p-value below {SIGNIFICANCE_CUTOFF:.4f}.")
 
     fig, axes = plt.subplots(1, len(POPULATIONS), figsize=(17, 4), sharey=True)
     for ax, population in zip(axes, POPULATIONS):
@@ -70,7 +71,7 @@ with response_tab:
     fig.tight_layout()
     st.pyplot(fig)
     plt.close(fig)
-    st.caption("Two-sided Mann–Whitney U tests; Benjamini–Hochberg adjusted p-values.")
+    st.caption(f"The table compares group means. We use p < {SIGNIFICANCE_CUTOFF:.4f} because five cell populations are checked at three days; the boxplots show the spread of individual samples.")
 
 with baseline_tab:
     st.subheader("Baseline melanoma PBMC samples from miraclib recipients")

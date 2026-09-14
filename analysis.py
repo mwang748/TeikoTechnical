@@ -1,10 +1,10 @@
 import sqlite3
 from contextlib import closing
 from pathlib import Path
-from statistics import median
+from statistics import mean
 
 import matplotlib.pyplot as plt
-from scipy.stats import false_discovery_control, mannwhitneyu
+from scipy.stats import ttest_ind
 
 DATABASE = Path(__file__).resolve().parent / "cell-count.db"
 
@@ -41,19 +41,11 @@ def get_frequencies():
         return [dict(row) for row in connection.execute(GET_FREQUENCIES)]
 
 
-def display_frequencies():
-    print(f"{'sample':<14} {'total_count':>12} {'population':<12} {'count':>10} {'percentage':>12}")
-    for row in get_frequencies():
-        print(
-            f"{row['sample']:<14} {row['total_count']:>12} "
-            f"{row['population']:<12} {row['count']:>10} "
-            f"{row['percentage']:>11.2f}%"
-        )
-
-
 # Part 3
 
 POPULATIONS = ("b_cell", "cd8_t_cell", "cd4_t_cell", "nk_cell", "monocyte")
+DAYS = (0, 7, 14)
+SIGNIFICANCE_CUTOFF = 0.05 / (len(POPULATIONS) * len(DAYS))
 
 def get_diffs(day=0):
     GET_SAMPLES_QUERY = """
@@ -107,35 +99,18 @@ def get_diff_stats(groups):
     for population in POPULATIONS:
         yes = groups[population]["yes"]
         no = groups[population]["no"]
-        p = mannwhitneyu(yes, no, alternative="two-sided").pvalue
+        p = ttest_ind(yes, no, equal_var=False).pvalue
         results.append({
             "population": population,
             "yes_n": len(yes),
             "no_n": len(no),
-            "yes_median": median(yes),
-            "no_median": median(no),
+            "yes_mean": mean(yes),
+            "no_mean": mean(no),
             "p_value": float(p),
+            "significant": bool(p < SIGNIFICANCE_CUTOFF),
         })
 
-    adjusted_p_values = false_discovery_control(
-        [result["p_value"] for result in results], method="bh"
-    )
-
-    for result, adjusted_p in zip(results, adjusted_p_values):
-        result["adjusted_p"] = float(adjusted_p)
-        result["significant"] = bool(adjusted_p < 0.05)
-
     return results
-
-
-def report_diffs(groups):
-    for result in get_diff_stats(groups):
-        print(
-            f"{result['population']}: yes median={result['yes_median']:.2f}%, "
-            f"no median={result['no_median']:.2f}%, "
-            f"p={result['p_value']:.4f}, adjusted p={result['adjusted_p']:.4f}, "
-            f"significant={result['significant']}"
-        )
 
 # Part 4:
 
@@ -175,13 +150,6 @@ def get_baseline_summary():
 
     return sample_ids, projects, responses, sexes
 
-def display_baseline_summary():
-    sample_ids, projects, responses, sexes = get_baseline_summary()
-    print(f"Baseline samples ({len(sample_ids)}):", sample_ids)
-    print("Samples by project:", projects)
-    print("Subjects by response:", responses)
-    print("Subjects by sex:", sexes)
-
 def avg_b_cells():
     AVG_B_CELLS = """
     SELECT AVG(b_cell)
@@ -195,18 +163,9 @@ def avg_b_cells():
 
     with closing(sqlite3.connect(DATABASE)) as connection:
         return connection.execute(AVG_B_CELLS).fetchone()[0]
+
+def main():
+    print(avg_b_cells)
+
 if __name__ == "__main__":
-    # Part 2:
-    display_frequencies()
-    
-    # Part 3:
-    groups = get_diffs()
-    report_diffs(groups)
-    plot_diffs(groups)
-
-    # Part 4:
-    display_baseline_summary()
-
-    # Avg b_cells
-    b_cells = avg_b_cells()
-    print(f"The average number of B cells for responder Melanoma males at time=0 is {b_cells:.2f}")
+    main()
